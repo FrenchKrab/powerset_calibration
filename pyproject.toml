@@ -1,0 +1,48 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[project]
+name =  "powerset_calibration"
+authors = [
+    {name = "Alexis Plaquet", email = "alexis.plaquet@irit.fr"},
+]
+description = "Companion package to the 'On the calibration of powerset speaker diarization models' paper published at Interspeech 2024."
+readme = "README.md"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11"
+]
+requires-python = ">=3.8.1"
+dynamic = ["version"]
+dependencies = [
+    "pyannote-audio >= 3.1",
+    "pandas",
+    "tqdm",
+    "pyarrow",
+]
+
+
+[project.urls]
+Documentation = "https://github.com/FrenchKrab/IS2024-powerset-calibration"
+Source = "https://github.com/FrenchKrab/IS2024-powerset-calibration"
+Tracker = "https://github.com/FrenchKrab/IS2024-powerset-calibration/issues"
+
+[tool.flit.module]
+name = "powerset_calibration"
+
+[tool.bandit]
+exclude_dirs = ["build","dist","tests","scripts"]
+number = 4
+recursive = true
+targets = "src"
+
+[tool.black]
+line-length = 100
+fast = true
