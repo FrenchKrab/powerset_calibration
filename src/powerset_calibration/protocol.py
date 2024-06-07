@@ -1,3 +1,7 @@
+"""Contains the Active learning protocol. The advised way to interact with the library :)
+
+"""
+
 import sys
 from enum import Flag, auto
 from pathlib import Path
@@ -39,13 +43,30 @@ from powerset_calibration.utils.inference import (
 from powerset_calibration.region_selector import (
     generate_windows,
     generate_windows_bins,
-    get_windows_whole_inference,
-    get_windows_whole_inference_bins,
+    generate_windows_multiplefiles,
+    generate_windows_multiplefiles_bins,
     tensor_to_timeline,
 )
 
 
 def fix_uem_tensor(uem_t: torch.Tensor, max_consecutive_wrongs: int = 1) -> torch.Tensor:
+    """Fixes UEM tensors that have been aggregated and have "intermediate" values instead
+    of pure 0.0 and 1.0. The point of the function is to only fix tensors that are NOT
+    too wrong.
+
+    Parameters
+    ----------
+    uem_t : torch.Tensor
+        Input UEM tensor
+    max_consecutive_wrongs : int, optional
+        Number of consecutive wrong values allowed, by default 1
+
+    Returns
+    -------
+    torch.Tensor
+        Fixed up (if needed) tensor
+    """
+
     unique_vals, unique_counts = uem_t.unique_consecutive(return_counts=True)
     for v, c in zip(unique_vals, unique_counts):
         if v == 0 or v == 1:
@@ -67,8 +88,8 @@ class ActiveLearningProtocolSettings(TypedDict):
 
     scope: Literal["file", "dataset"]
     """Scope of the active learning duration constraint :
-    - `file` for x% of data in each file
-    - `dataset` for x% of data in the whole dataset
+    - `file` to select x% of each file
+    - `dataset` to select x% of data in the whole dataset
     """
 
     window_duration: float
@@ -153,12 +174,12 @@ class ActiveLearningProtocol(SpeakerDiarizationProtocol):
         ----------
         protocol : Union[Protocol, str]
             Protocol to use (if Protocol) or load (if str)
-        settings : Dict[str, ActiveLearningSettings]
+        settings : Dict[Union[str, Tuple[str]], ActiveLearningProtocolSettings]
             Maps a subset or tuple of subset to an active learning settings dict.
             A subset is 'train', 'development' or 'test'.
-            If a tuple of subset is provided, the active learning windows will be
-            computed for all subsets in the tuple (meaning they share the total time
-            to annotate !).
+            If a tuple of subset is provided (e.g. `settings={('train','val',): {...}}`),
+            the active learning windows will be computed for all subsets in the
+            tuple (meaning they share the total time to annotate !).
         protocol_preprocessors : Dict[str, Callable], optional
             Preprocessors to use if the provided `protocol` is not
             yet loaded (= is a str). Default to just a FileFinder if not specified.
@@ -389,7 +410,7 @@ class ActiveLearningProtocol(SpeakerDiarizationProtocol):
                         "Cannot use heuristic_direction='bins' without heuristic_bins !"
                     )
 
-                return get_windows_whole_inference_bins(
+                return generate_windows_multiplefiles_bins(
                     cat_heur,
                     cat_uris,
                     uris=infdf["uri"].unique(),
@@ -402,7 +423,7 @@ class ActiveLearningProtocol(SpeakerDiarizationProtocol):
                     t_uem=cat_uem,
                 )
             else:
-                return get_windows_whole_inference(
+                return generate_windows_multiplefiles(
                     cat_heur,
                     cat_uris,
                     uris=infdf["uri"].unique(),

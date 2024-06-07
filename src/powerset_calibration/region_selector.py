@@ -1,3 +1,8 @@
+"""
+Select regions of data from tensors of values using convolutions.
+e.g. select regions of low confidence in a file.
+"""
+
 import itertools
 import math
 import sys
@@ -30,10 +35,10 @@ def generate_windows(
     helps to speed up the algorithm by selecting multiple windows at once, which
     allows overlapping selection.
 
-    If (fore some reason_ you want only regions of size of `window_duration`,
-    set `penality=math.inf` and `selections_per_iterations=1` (very slow).
+    (If for some reason you want only regions of size of `window_duration`,
+    set `penality=math.inf` and `selections_per_iterations=1`) (very slow).
 
-    Warning: Currently, the last windows to be placed can be smaller than `window_duration`,
+    **Warning**: Currently, the last windows to be placed can be smaller than `window_duration`,
     and is **not** forced to be ajacent to the other windows to compensate for that!
 
     Parameters
@@ -248,7 +253,7 @@ def generate_windows_bins(
     return to_annotate
 
 
-def get_windows_whole_inference(
+def generate_windows_multiplefiles(
     t_htensor: torch.Tensor,
     t_uris: torch.Tensor,
     uris: Sequence[str],
@@ -262,32 +267,53 @@ def get_windows_whole_inference(
     argminmax: Callable = torch.argmin,
     t_uem: Optional[torch.Tensor] = None,
 ) -> Dict[str, Timeline]:
-    """Apply active learning window selection on a whole inference file.
+    """Apply the region selection algorithm to a tensor of concatenated heuristics.
+    This means the algorithm will be able to choose from all files (and thus have a 'global'
+    selection budget).
 
-    TODO : add missing params
+    See `generate_windows` for other details
 
     Parameters
     ----------
+    t_htensor : torch.Tensor
+        1D "heuristic" tensor used to guide the region selection. Can contain multiple
+        concatenated tensors.
+    t_uris : torch.Tensor
+        1D tensor containing uri IDs as to distinguish file borders.
+        Same shape as `t_htensor`.
+    uris : Sequence[str]
+        URIs strings correspondig to the URI IDs in t_uris.
+    fps : float
+        Frames per second of the model
     window_duration : float
-        Duration of the active learning windows
+        Duration of selected regions
     sliding_window_step : float
-        Step size to find the best location for sliding windows
-    annotated_ratio : float
-        Ratio of data to annotate (eg 0.05 = 5%)
-    annotated_duration : float, optional
-        Duration of data to annotate. Either this or annotated ratio, by default None
+        How precisely should regions be placed, in seconds
+    annotated_ratio : Optional[float], optional
+        Ratio of the data to annotate in [0; 1].
+        Incompatible with `annotated_duration`, by default None
+    annotated_duration : Optional[float], optional
+        Total time to annotate in seconds.
+        Incompatible with `annotated_ratio`, by default None
     selections_per_iteration : int, optional
-        Max selection per iteration, see `generate_windows` for more details,
-        by default math.inf
+        How many windows should the algorithm try to place at each iteration.
+        Higher values are faster but the results do not take penality into account
+        as much. You probably either want to set this to `1` or `sys.maxsize`
+        By default `sys.maxsize`
     conv : Callable, optional
-        Convolution fn, by default torch.nn.functional.avg_pool1d
+        Convolutional fn to use, by default `torch.nn.functional.avg_pool1d`
     argminmax : Callable, optional
-        argmin or argmax, should probably always be argmin, by default torch.argmin
+        Should be `torch.argmax` or `torch.argmin`, depending on whether kernels
+        should contain the smallest or biggest value possible, by default `torch.argmin`
+    t_uem : Optional[torch.Tensor], optional
+        1D UEM boolean tensor, same shape as `t_htensor`, by default None
+
     Returns
     -------
     Dict[str, Timeline]
-        Dictionary mapping URIs to the timeline containing the active learning windows.
+        Maps each URI to the timeline of selected regions.
     """
+
     if (annotated_duration is None) == (annotated_ratio is None):
         raise ValueError(
             "annotated_ratio and annotated_duration are mutually exclusive. (Only) one of them must be provided"
@@ -343,7 +369,7 @@ def get_windows_whole_inference(
     return result
 
 
-def get_windows_whole_inference_bins(
+def generate_windows_multiplefiles_bins(
     t_htensor: torch.Tensor,
     t_uris: torch.Tensor,
     uris: Sequence[str],
@@ -355,6 +381,43 @@ def get_windows_whole_inference_bins(
     conv: Callable = torch.nn.functional.avg_pool1d,
     t_uem: Optional[torch.Tensor] = None,
 ) -> Dict[str, Timeline]:
+    """Apply the BINNED region selection algorithm to a tensor of concatenated heuristics.
+    This means the algorithm will be able to choose from all files (and thus have a 'global'
+    selection budget).
+
+    See `generate_windows_bins` for other details.
+
+    Parameters
+    ----------
+    t_htensor : torch.Tensor
+        1D "heuristic" tensor used to guide the region selection. Can contain multiple
+        concatenated tensors.
+    t_uris : torch.Tensor
+        1D tensor containing uri IDs as to distinguish file borders.
+        Same shape as `t_htensor`.
+    uris : Sequence[str]
+        URIs strings correspondig to the URI IDs in t_uris.
+    fps : float
+        Frames per second of the model
+    window_duration : float
+        Duration of selected regions
+    sliding_window_step : float
+        How precisely should regions be placed, in seconds
+    bins_count: int,
+        Number of bins/quantiles to use.
+    samples_per_bin: int,
+        Number of windows to sample per quantiles.
+    conv : Callable, optional
+        Convolutional fn to use, by default `torch.nn.functional.avg_pool1d`
+    t_uem : Optional[torch.Tensor], optional
+        1D UEM boolean tensor, same shape as `t_htensor`, by default None
+
+    Returns
+    -------
+    Dict[str, Timeline]
+        Maps each URI to the timeline of selected regions.
+    """
+
     # TODO: factorize with get_windows_whole_inference
     if t_uem is not None and t_uem.dtype != torch.bool:
         raise ValueError("UEM must be a boolean tensor")

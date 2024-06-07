@@ -1,3 +1,7 @@
+"""Contains code to generate 'Inference Files' (aka 'Inference DataFrames') from local segmentation models.
+Each inference will generate the inference file (.inf.csv or .inf.parquet) and an associated metadata file (.meta.yaml).
+"""
+
 import itertools
 import os
 import pathlib
@@ -234,10 +238,11 @@ def model_inference_to_file(
     step_ratio: Optional[float] = None,
     step_duration: Optional[float] = None,
     file_format: Literal["csv", "parquet"] = "parquet",
-    metadata: dict = None,
+    metadata: Optional[dict] = None,
     preprocessors: Optional[dict] = None,
 ):
-    """Save the model inference to a file.
+    """Do segmentation model inference and save the result to a file.
+    (Do NOT contain the embedding extraction + clustering process, only the local EEND inference)
 
     Parameters
     ----------

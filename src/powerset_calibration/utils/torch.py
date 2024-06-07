@@ -254,7 +254,10 @@ def pad_dim(
     dim: int = -1,
     mode: str = "constant",
 ) -> Tensor:
-    """Generic function for pad a specific tensor dimension."""
+    """
+    Generic function for pad a specific tensor dimension.
+    Credit: Etienne LABBE
+    """
     missing = max(target_length - x.shape[dim], 0)
 
     if missing == 0:

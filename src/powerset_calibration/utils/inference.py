@@ -1,3 +1,5 @@
+"""Utilities for handling inference dataframes/tensors and for aggregating tensors."""
+
 from typing import Dict, Iterable, Literal, Optional
 
 import pandas as pd
@@ -12,7 +14,7 @@ from pyannote.core import SlidingWindow, SlidingWindowFeature, Timeline
 
 AggregationStrategyType = Literal["lazy", "soft_segmentation"]
 """ 
-- `lazy` = no aggregation, i cant remember the use...
+- `lazy` = no aggregation, return the tensor as is (implying it will be aggregated later)
 - `soft_segmentation` = rely on the soft segmentation pipeline"""
 
 

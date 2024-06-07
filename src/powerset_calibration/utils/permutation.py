@@ -1,3 +1,5 @@
+"""Permutation utilities for powerset."""
+
 import itertools
 from typing import Callable, List, Literal, Optional, Tuple
 
