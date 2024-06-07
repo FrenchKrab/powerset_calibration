@@ -1,4 +1,5 @@
 """Holds miscellaneous PyTorch utility functions."""
+
 from typing import Iterable, Literal, Optional, Tuple, Union
 
 import torch
@@ -71,9 +72,7 @@ def replace_value_with_last(tensor: torch.Tensor, to_replace=-1) -> torch.Tensor
             start_idx = uniques_indexes[i - 1]
             end_idx = uniques_indexes[i - 1] + counts[i]
             # the tensor is flattened: make sure it doesnt overflow to the next dim
-            end_idx = min(
-                end_idx, ((start_idx // tensor.shape[-1]) + 1) * tensor.shape[-1]
-            )
+            end_idx = min(end_idx, ((start_idx // tensor.shape[-1]) + 1) * tensor.shape[-1])
             result[start_idx:end_idx] = uniques[i - 1]
     return result.reshape(tensor.shape)
 
@@ -242,9 +241,7 @@ def pad_and_stack(
         Padded and stacked tensor.
     """
     target_len = max(tensor.shape[dim_pad] for tensor in tensors)
-    tensors = [
-        pad_dim(tensor, target_len, "left", fill_value, dim_pad) for tensor in tensors
-    ]
+    tensors = [pad_dim(tensor, target_len, "left", fill_value, dim_pad) for tensor in tensors]
     tensors = torch.stack(tensors, dim=dim_stack)
     return tensors
 

@@ -15,7 +15,7 @@ from powerset_calibration.utils.permutation import permutate_powerset
 
 class SoftSpeakerSegmentationPowerset(Pipeline):
     """Aggregates overlapping sliding windows by making them match as much as possible.
-    NOT usable for real diarization (speaker identities might swap after a few windows!). 
+    NOT usable for real diarization (speaker identities might swap after a few windows!).
 
     Copyright (c) 2024- CNRS
     AUTHORS
@@ -83,9 +83,7 @@ class SoftSpeakerSegmentationPowerset(Pipeline):
         )
         self._frames: SlidingWindow = SlidingWindow(frame_duration, frame_duration)
 
-        self._powerset = Powerset(
-            len(specifications.classes), specifications.powerset_max_classes
-        )
+        self._powerset = Powerset(len(specifications.classes), specifications.powerset_max_classes)
 
     @property
     def segmentation_batch_size(self) -> int:
@@ -114,9 +112,7 @@ class SoftSpeakerSegmentationPowerset(Pipeline):
             inference_hook = functools.partial(hook, "segmentation", None)
 
         if self.training:
-            segmentations = file.setdefault("cache", dict()).setdefault(
-                "segmentation", None
-            )
+            segmentations = file.setdefault("cache", dict()).setdefault("segmentation", None)
 
             if segmentations is None:
                 segmentations = self._segmentation(file, hook=inference_hook)
@@ -153,11 +149,7 @@ class SoftSpeakerSegmentationPowerset(Pipeline):
 
         # number of frames in common between two consecutive chunks
         num_overlapping_frames = round(
-            (
-                1
-                - ps_segmentations.sliding_window.step
-                / ps_segmentations.sliding_window.duration
-            )
+            (1 - ps_segmentations.sliding_window.step / ps_segmentations.sliding_window.duration)
             * num_frames
         )
 
@@ -175,9 +167,7 @@ class SoftSpeakerSegmentationPowerset(Pipeline):
             # remove unused classes
             if ignore_index is not None:
                 num_missing_in_classes = (segmentation == ignore_index).int().sum(dim=0)
-                if (
-                    num_missing_in_classes != num_frames & num_missing_in_classes != 0
-                ).any():
+                if (num_missing_in_classes != num_frames & num_missing_in_classes != 0).any():
                     raise ValueError(
                         "Segmentation contains chunks where SOME frames have missing classes. The class should be missing for the whole chunk or not be missing at all."
                     )
@@ -196,9 +186,7 @@ class SoftSpeakerSegmentationPowerset(Pipeline):
                     previous_segmentation = segmentation[..., best_perm].clone()
                 else:
                     # account that permutate works with batch, hence the [None,...] and [0]
-                    _, best_perm = permutate(
-                        align_ref[None, ...], align_pred[None, ...]
-                    )
+                    _, best_perm = permutate(align_ref[None, ...], align_pred[None, ...])
                     previous_segmentation = segmentation[..., best_perm[0]].clone()
             permutated_segmentations[c] = previous_segmentation
 

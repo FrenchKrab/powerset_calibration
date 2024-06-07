@@ -267,7 +267,9 @@ def get_heuristic_tensor_segmentation(
                 f"This function can only make sense of unaggregated tensors if they are 3D, got {preds.ndim} dims."
             )
         if sliding_window is None:
-            raise ValueError("You must pass a sliding window if you want to use an unaggregated tensor")
+            raise ValueError(
+                "You must pass a sliding window if you want to use an unaggregated tensor"
+            )
     if preds[(preds < 0) | (preds > 1)].any():
         raise ValueError("Predictions must be between 0 and 1")
 
@@ -307,22 +309,30 @@ def get_heuristic_tensor_segmentation(
                 raise ValueError("If using bce, powerset must be provided.")
             if powerset is not None and targets.shape[-1] != powerset.num_classes:
                 ml_preds = powerset.to_multilabel(preds.log(), True)
-                targets, _ = lossy_match_speaker_count_and_permutate(ml_preds[None, ...], targets[None, ...])
+                targets, _ = lossy_match_speaker_count_and_permutate(
+                    ml_preds[None, ...], targets[None, ...]
+                )
                 targets = targets[0]
                 targets = powerset.to_powerset(targets).float()
-            return -torch.nn.functional.binary_cross_entropy(preds, targets.float(), reduction="none").mean(dim=-1)
+            return -torch.nn.functional.binary_cross_entropy(
+                preds, targets.float(), reduction="none"
+            ).mean(dim=-1)
         # Cross entropy loss
         elif heuristic == "ce":
             if powerset is not None:
                 # make targets align to the ml representation of preds, then convert targets to powerset space
                 ml_preds = powerset.to_multilabel(preds.log(), soft=True)
-                targets, _ = lossy_match_speaker_count_and_permutate(ml_preds[None, ...], targets[None, ...])
+                targets, _ = lossy_match_speaker_count_and_permutate(
+                    ml_preds[None, ...], targets[None, ...]
+                )
                 targets = targets[0]
                 targets = powerset.to_powerset(targets)
             else:
                 raise ValueError("Cross entropy does not make sense for multilabel problems")
             # compute ce
-            ce = -torch.nn.functional.nll_loss(preds.log(), targets.argmax(dim=-1), reduction="none")
+            ce = -torch.nn.functional.nll_loss(
+                preds.log(), targets.argmax(dim=-1), reduction="none"
+            )
             return ce
     else:
         raise ValueError("Unsupported heuristic")

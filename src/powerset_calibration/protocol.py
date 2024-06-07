@@ -59,7 +59,6 @@ def fix_uem_tensor(uem_t: torch.Tensor, max_consecutive_wrongs: int = 1) -> torc
     return result
 
 
-
 class ActiveLearningProtocolSettings(TypedDict):
     """Settings to parametrize the active learning protocol."""
 

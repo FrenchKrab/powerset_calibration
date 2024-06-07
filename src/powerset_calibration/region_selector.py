@@ -1,13 +1,12 @@
 import itertools
 import math
 import sys
-from typing import Callable, Dict, Literal, Optional, Sequence, Union
+from typing import Callable, Dict, Optional, Sequence
 
 import torch
-from pyannote.audio.utils.powerset import Powerset
-from pyannote.core import Timeline
 from powerset_calibration.utils.pyannote_core import tensor_to_timeline
 from powerset_calibration.utils.torch import insert_at_indices, insert_at_indices_revert
+from pyannote.core import Timeline
 
 
 def generate_windows(
@@ -325,7 +324,7 @@ def get_windows_whole_inference(
         fps=fps,
         window_duration=window_duration,
         sliding_window_step=sliding_window_step,
-        annotated_ratio=None,   # we computed it ourselves
+        annotated_ratio=None,  # we computed it ourselves
         annotated_duration=annotated_duration,
         conv=conv,
         argminmax=argminmax,
@@ -396,4 +395,3 @@ def get_windows_whole_inference_bins(
         result[uri] = tensor_to_timeline(f_selected, fps=fps, uri=uri)
 
     return result
-

@@ -35,9 +35,7 @@ def permutate_powerset(
     best_permutation: Optional[tuple[int]] = None
     best_score = torch.inf
 
-    for permutation in itertools.permutations(
-        range(powerset.num_classes), powerset.num_classes
-    ):
+    for permutation in itertools.permutations(range(powerset.num_classes), powerset.num_classes):
         permutation_ps = powerset.permutation_mapping[permutation]
         permutated_t2 = t2[..., permutation_ps]
 
@@ -104,9 +102,7 @@ def lossy_match_speaker_count_and_permutate(
 
     # if t2 has too many speakers
     if t2.shape[-1] < t1.shape[-1]:
-        raise Exception(
-            "Something went wrong in lossy_match_speaker_count_and_permutate."
-        )
+        raise Exception("Something went wrong in lossy_match_speaker_count_and_permutate.")
 
     # if we're there, t2 has too many speakers ! We need to discard the least relevant ones
 
@@ -120,9 +116,7 @@ def lossy_match_speaker_count_and_permutate(
 
             best_speaker_selection, best_permutation = None, None
             best_cost = torch.inf
-            for selected_speakers in itertools.combinations(
-                range(u2.shape[-1]), u1.shape[-1]
-            ):
+            for selected_speakers in itertools.combinations(range(u2.shape[-1]), u1.shape[-1]):
                 u2_select = u2[:, selected_speakers]
                 u2_select_align, perms, costs = permutate(
                     u1[None, ...],
@@ -143,9 +137,7 @@ def lossy_match_speaker_count_and_permutate(
             t2_aligned = torch.cat(t2_aligned_batches, dim=0)
     elif speaker_selection_mode == "activity":
         topk_active = t2.sum(dim=1).topk(dim=-1, k=t1.shape[-1]).indices
-        t2_mostactive = t2.gather(
-            dim=2, index=topk_active.unsqueeze(1).tile(1, t2.shape[1], 1)
-        )
+        t2_mostactive = t2.gather(dim=2, index=topk_active.unsqueeze(1).tile(1, t2.shape[1], 1))
         t2_aligned, best_perms = permutate(t1, t2_mostactive, cost_func=cost_func)
     return t2_aligned, best_perms
 
