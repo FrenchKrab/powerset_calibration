@@ -32,7 +32,7 @@ jobs:
 
       # ADJUST THIS: build your documentation into docs/.
       # We use a custom build script for pdoc itself, ideally you just run `pdoc -o docs/ ...` here.
-      - run: pdoc src -o docs/ --docformat numpy
+      - run: pdoc powerset_calibration -o docs/ --docformat numpy
       - uses: actions/upload-pages-artifact@v2
         with:
           path: docs/
