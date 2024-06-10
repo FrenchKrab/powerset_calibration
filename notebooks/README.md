@@ -1,2 +1,0 @@
-# `powerset_calibration` notebooks
-
