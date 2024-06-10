@@ -1,6 +1,6 @@
 # powerset_calibration
 
-This repository contains the code used to perform the experiments conducted in the paper '*On the calibration of powerset speaker diarization models*' published at Interspeech 2024.
+This package contains the code used to perform the experiments conducted in the paper '*On the calibration of powerset speaker diarization models*' published at Interspeech 2024.
 
 - [ 📄 Browse the original paper repository ](https://github.com/FrenchKrab/IS2024-powerset-calibration?tab=readme-ov-file)
 - [ 📘 Read the docs ](https://frenchkrab.github.io/powerset_calibration/)
@@ -38,4 +38,4 @@ To learn how to use this library, please refer to the notebooks which should giv
 
 ## 📘 Documentation
 
-If you want more detail about function/method arguments, please refer to the documentation: https://frenchkrab.github.io/powerset_-_calibration/
+If you want more detail about function/method arguments, please refer to the documentation: https://frenchkrab.github.io/powerset_calibration

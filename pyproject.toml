@@ -27,12 +27,13 @@ dependencies = [
     "tqdm",
     "pyarrow",
 ]
+license = {text = "MIT License"}
 
 
 [project.urls]
-Documentation = "https://github.com/FrenchKrab/IS2024-powerset-calibration"
-Source = "https://github.com/FrenchKrab/IS2024-powerset-calibration"
-Tracker = "https://github.com/FrenchKrab/IS2024-powerset-calibration/issues"
+Documentation = "https://frenchkrab.github.io/powerset_calibration"
+Source = "https://github.com/FrenchKrab/powerset_calibration"
+Tracker = "https://github.com/FrenchKrab/powerset_calibration/issues"
 
 [tool.flit.module]
 name = "powerset_calibration"

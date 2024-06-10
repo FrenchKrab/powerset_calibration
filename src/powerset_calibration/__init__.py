@@ -15,4 +15,4 @@ And second obtaining the regions of interest using the model probabilities. Rele
 
 """
 
-__version__ = "1.0.0"
+__version__ = "0.1.2"
