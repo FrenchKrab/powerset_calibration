@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from typing import TypedDict, Union
 
@@ -40,19 +39,11 @@ def compute_der_inference_file(fid: Union[str, Path]) -> DerComponentsDict:
     is_aggregated = len(metadata["last_inference_shape"]) == 2
 
     t_preds = torch.stack(
-        [
-            torch.from_numpy(infdf[col].values)
-            for col in infdf.columns
-            if col.startswith("out_")
-        ],
+        [torch.from_numpy(infdf[col].values) for col in infdf.columns if col.startswith("out_")],
         dim=-1,
     )
     t_refs = torch.stack(
-        [
-            torch.from_numpy(infdf[col].values)
-            for col in infdf.columns
-            if col.startswith("ref_")
-        ],
+        [torch.from_numpy(infdf[col].values) for col in infdf.columns if col.startswith("ref_")],
         dim=-1,
     )
     t_uem = torch.from_numpy(infdf["uem"].values)
@@ -60,9 +51,7 @@ def compute_der_inference_file(fid: Union[str, Path]) -> DerComponentsDict:
     # Reshape reference & hypothesis if output not aggregated/is sliding window
     if not is_aggregated:
         # reshape to (num_windows, num_frames_in_window, num_classes)
-        t_preds = t_preds.reshape(
-            (-1, metadata["model"]["num_frames"], t_preds.shape[-1])
-        )
+        t_preds = t_preds.reshape((-1, metadata["model"]["num_frames"], t_preds.shape[-1]))
         t_refs = t_refs.reshape((-1, metadata["model"]["num_frames"], t_refs.shape[-1]))
         # reshape to (num_windows, num_frames_in_window)
         t_uem = t_uem.reshape((-1, metadata["model"]["num_frames"])).all(dim=-1)
@@ -71,9 +60,7 @@ def compute_der_inference_file(fid: Union[str, Path]) -> DerComponentsDict:
         if metadata["model"]["specifications"]["powerset"] is True:
             powerset = Powerset(
                 num_classes=len(metadata["model"]["specifications"]["classes"]),
-                max_set_size=metadata["model"]["specifications"][
-                    "powerset_max_classes"
-                ],
+                max_set_size=metadata["model"]["specifications"]["powerset_max_classes"],
             )
             t_preds = powerset.to_multilabel(t_preds)
     else:
@@ -111,14 +98,10 @@ def compute_der_inference_file(fid: Union[str, Path]) -> DerComponentsDict:
         false_alarm = torch.maximum(detection_error, torch.zeros_like(detection_error))
         # (batch_size, num_frames, num_thresholds)
 
-        missed_detection = torch.maximum(
-            -detection_error, torch.zeros_like(detection_error)
-        )
+        missed_detection = torch.maximum(-detection_error, torch.zeros_like(detection_error))
         # (batch_size, num_frames, num_thresholds)
 
-        speaker_confusion = (
-            torch.sum((hypothesis != target) * hypothesis, 1) - false_alarm
-        )
+        speaker_confusion = torch.sum((hypothesis != target) * hypothesis, 1) - false_alarm
         # (batch_size, num_frames, num_thresholds)
 
         false_alarm = torch.sum(torch.sum(false_alarm, 1), 0)
