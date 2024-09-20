@@ -38,7 +38,7 @@ def permutate_powerset(
     best_score = torch.inf
 
     for permutation in itertools.permutations(range(powerset.num_classes), powerset.num_classes):
-        permutation_ps = powerset.permutation_mapping[permutation]
+        permutation_ps = powerset.permutation_powerset(torch.tensor(permutation, dtype=torch.int))
         permutated_t2 = t2[..., permutation_ps]
 
         perm_loss = loss_fn(t1, permutated_t2).item()
@@ -144,6 +144,30 @@ def lossy_match_speaker_count_and_permutate(
     return t2_aligned, best_perms
 
 
+def match_speaker_count(
+    *tensors: torch.Tensor,
+) -> Tuple[torch.Tensor, ...]:
+    new_ts: List[torch.Tensor] = []
+
+    max_n_speakers = 0
+    for t in tensors:
+        if t.ndim != 3:
+            raise ValueError(
+                f"tensors should be (b,f,speaker_count) tensors; got {t.shape} instead."
+            )
+        t_new = t[..., (t.sum(dim=(0, 1)) > 0)]
+        max_n_speakers = max(max_n_speakers, t_new.shape[-1])
+        new_ts.append(t_new)
+    for i in range(len(new_ts)):
+        t = new_ts[i]
+        if t.shape[-1] < max_n_speakers:
+            t_v2 = torch.zeros(t.shape[:-1] + (max_n_speakers,))
+            t_v2[..., : t.shape[-1]] = t
+            new_ts[i] = t_v2
+
+    return tuple(new_ts)
+
+
 def match_speaker_count_and_permutate(
     t1: torch.Tensor,
     t2: torch.Tensor,
@@ -170,24 +194,7 @@ def match_speaker_count_and_permutate(
         All inactive speaker channels have dropped if they do not correspond to any active channel in the other tensor.
         t2 has been aligned to t1.
     """
-    if t1.ndim != 3 or t2.ndim != 3:
-        raise ValueError(
-            f"t1 and t2 should be (b,f,speaker_count) tensors; got {t1.shape} and {t2.shape} instead."
-        )
-
-    # first, remove all inactive speakers from t1 and t2
-    t1 = t1[..., (t1.sum(dim=(0, 1)) > 0)]
-    t2 = t2[..., (t2.sum(dim=(0, 1)) > 0)]
-
-    # if t1/t2 have too few speakers, just pad with inactive speakers
-    if t2.shape[-1] < t1.shape[-1]:
-        t2_v2 = torch.zeros_like(t1)
-        t2_v2[..., : t2.shape[-1]] = t2
-        t2 = t2_v2
-    elif t2.shape[-1] > t1.shape[-1]:
-        t1_v2 = torch.zeros_like(t2)
-        t1_v2[..., : t1.shape[-1]] = t1
-        t1 = t1_v2
+    t1, t2 = match_speaker_count(t1, t2)
 
     # if no speaker in the end
     if t1.shape[-1] == 0 and t2.shape[-1] == 0:
@@ -195,12 +202,6 @@ def match_speaker_count_and_permutate(
             t1 = torch.nn.functional.pad(t1, (1, 0), value=0)
             t2 = torch.nn.functional.pad(t1, (1, 0), value=0)
         return t1, t2
-
-    # if t2 has the right number of speakers, call the regular permutate
-    if t1.shape[-1] != t2.shape[-1]:
-        raise Exception(
-            "Something went wrong in match_speaker_count_and_permutate. This should not happen."
-        )
 
     t2, _ = permutate(t1, t2, cost_func=cost_func)
     return t1, t2
